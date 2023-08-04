@@ -316,6 +316,10 @@ var _ = Describe("Release", func() {
 			Expect(licRes.FinalizeArgsForCall(0) == finalLic).To(BeTrue())
 		})
 
+		It("generates SBOMs for each package", func() {
+
+		})
+
 		It("does nothing when there is nothing to finalize", func() {
 			release = NewRelease("", "", "", true, nil, nil, nil, nil, "", fs)
 			Expect(release.Finalize(ArchiveIndicies{}, 2)).ToNot(HaveOccurred())

@@ -109,6 +109,7 @@ func (r *release) Manifest() birelman.Manifest {
 			Fingerprint:  pkg.Fingerprint(),
 			SHA1:         pkg.ArchiveDigest(),
 			Dependencies: pkg.DependencyNames(),
+			SBOM:         pkg.SBOM(),
 		})
 	}
 

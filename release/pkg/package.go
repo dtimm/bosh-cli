@@ -1,6 +1,9 @@
 package pkg
 
 import (
+	"fmt"
+	"os/exec"
+
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 
@@ -24,6 +27,8 @@ type Package struct {
 
 	extractedPath string
 	fs            boshsys.FileSystem
+
+	sbom string
 }
 
 func NewPackage(resource Resource, dependencyNames []string) *Package {
@@ -111,5 +116,25 @@ func (p *Package) CleanUp() error {
 	if p.fs != nil && len(p.extractedPath) > 0 {
 		return p.fs.RemoveAll(p.extractedPath)
 	}
+	return nil
+}
+
+func (p *Package) SBOM() string {
+	if p.sbom != "" {
+		return p.sbom
+	}
+	p.GenerateSBOM()
+	return p.sbom
+}
+
+func (p *Package) GenerateSBOM() error {
+	_ = p.resource.ArchivePath()
+	c := exec.Command("syft", "packages", "--output", "spdx-json", fmt.Sprintf("file:%s", p.resource.ArchivePath()))
+	out, err := c.Output()
+	if err != nil {
+		return err
+	}
+
+	p.sbom = string(out)
 	return nil
 }

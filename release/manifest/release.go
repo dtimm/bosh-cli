@@ -35,6 +35,7 @@ type PackageRef struct {
 	Fingerprint  string   `yaml:"fingerprint"`
 	SHA1         string   `yaml:"sha1"`
 	Dependencies []string `yaml:"dependencies"`
+	SBOM         string   `yaml:"sbom,omitempty"`
 }
 
 type CompiledPackageRef struct {

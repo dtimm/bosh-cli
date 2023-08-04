@@ -71,4 +71,13 @@ var _ = Describe("Package", func() {
 			Expect(pkg.CleanUp()).ToNot(HaveOccurred())
 		})
 	})
+
+	Describe("GenerateSBOM", func() {
+		It("generates a SBOM for the package", func() {
+			pkg := NewPackage(boshres.NewResourceWithBuiltArchive("name", "fp", "path", "sha1"), nil)
+			Expect(pkg.GenerateSBOM()).To(BeNil())
+
+			Expect(pkg.SBOM()).ToNot(BeNil())
+		})
+	})
 })
