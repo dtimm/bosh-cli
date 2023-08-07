@@ -67,7 +67,7 @@ var _ = Describe("FSGenerator", func() {
 	})
 
 	Describe("Init", func() {
-		It("creates commont jobs, packages and src directories", func() {
+		It("creates common jobs, packages and src directories", func() {
 			err := releaseDir.Init(true)
 			Expect(err).ToNot(HaveOccurred())
 

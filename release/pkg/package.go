@@ -10,6 +10,12 @@ import (
 	"github.com/cloudfoundry/bosh-cli/v7/crypto"
 	. "github.com/cloudfoundry/bosh-cli/v7/release/resource"
 	crypto2 "github.com/cloudfoundry/bosh-utils/crypto"
+
+	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/formats"
+	"github.com/anchore/syft/syft/pkg/cataloger"
+	"github.com/anchore/syft/syft/sbom"
+	"github.com/anchore/syft/syft/source"
 )
 
 type ByName []*Package
@@ -128,13 +134,41 @@ func (p *Package) SBOM() string {
 }
 
 func (p *Package) GenerateSBOM() error {
-	_ = p.resource.ArchivePath()
-	c := exec.Command("syft", "packages", "--output", "spdx-json", fmt.Sprintf("file:%s", p.resource.ArchivePath()))
-	out, err := c.Output()
+	t := fmt.Sprintf("%s.tgz", p.resource.ArchivePath())
+	err := exec.Command("cp", p.resource.ArchivePath(), t).Run()
 	if err != nil {
 		return err
 	}
 
-	p.sbom = string(out)
+	src, err := source.NewFromFile(source.FileConfig{
+		Path: t,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to construct source from user input %q: %w", t, err)
+	}
+
+	result := sbom.SBOM{
+		Source: src.Describe(),
+		Descriptor: sbom.Descriptor{
+			Name:    "syft",
+			Version: "v-your-syft-version-here",
+		},
+	}
+
+	packageCatalog, relationships, theDistro, err := syft.CatalogPackages(src, cataloger.DefaultConfig())
+	if err != nil {
+		return err
+	}
+
+	result.Artifacts.Packages = packageCatalog
+	result.Artifacts.LinuxDistribution = theDistro
+	result.Relationships = relationships
+
+	bytes, err := syft.Encode(result, formats.ByName("spdx-json"))
+	if err != nil {
+		return err
+	}
+
+	p.sbom = string(bytes)
 	return nil
 }
